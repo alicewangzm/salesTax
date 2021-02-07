@@ -1,0 +1,84 @@
+"""
+Create a loop that keep takes input until input 'end'
+"""
+
+"""
+using wit natural language process api to recognize the number, price, and type of the product
+"""
+from wit import wit
+
+client = wit.Wit(access_token='WR3YSTVMM2J32NLYXLSJNXYRGBPR2RU4')
+
+"""
+handle response from wit and return a list of values
+"""
+def wit_reponse(message_text):
+	resp = client.message(message_text)
+	entity1 = None
+	entity2 = None
+	entity3 = None
+	value1 = None
+	value2 = None
+	value3 = None
+	traits = None
+	traits_val = None
+
+	try:
+		entity1 = list(resp['entities'])[0]
+		entity2 = list(resp['entities'])[1]
+		entity3 = list(resp['entities'])[2]
+		value1 = resp['entities'][entity1][0]['value']
+		value2 = resp['entities'][entity2][0]['value']
+		value3 = resp['entities'][entity3][0]['value']
+		traits = list(resp['traits'])[0]
+		traits_val = resp['traits'][traits][0]['value']
+	except:
+		pass
+	return [entity1, entity2, entity3, value1, value2, value3, traits, traits_val]
+
+
+"""
+calculate tax for each item by passing the type of the product, price, and a bool value indicates if it's imported
+"""
+def calc_tax(types, price, imported):
+	normal_tax = 0
+	import_tax = 0
+	after_price = price
+	if types == 'other_items':
+		normal_tax = price * 0.1
+		after_price += normal_tax
+
+	if imported:
+		import_tax = price * 0.05
+		after_price += import_tax
+		return [round(normal_tax + import_tax, 2), round(after_price, 2)]
+	else:
+		return [round(normal_tax + import_tax, 2), round(after_price, 2)]
+
+
+"""
+main program store all a list of lists of two items(name of the product and the price of the product)
+"""
+item_list = input('Enter your list of items(enter end to stop): ')
+total_sales = 0.00
+total_tax = 0.00
+store_list = []
+
+while item_list != 'end':
+	item_price = float(wit_reponse(item_list)[3])
+	item_type = wit_reponse(item_list)[1].split(':')[1]
+	is_imported = wit_reponse(item_list)[7] == 'imported'
+	item_tax = calc_tax(item_type, item_price, is_imported)[0]
+	after_tax_price = calc_tax(item_type, item_price, is_imported)[1]
+	total_tax += item_tax
+	total_sales += after_tax_price
+	item_name = item_list.split(' at ')[0] + ': '
+	store_list.append([item_name, after_tax_price])
+	item_list = input()
+
+for item in store_list:
+	temp_price = item[1]
+	print(item[0] + f'{temp_price:.2f}')
+
+print(f'Sales Taxes: {total_tax:.2f}')
+print(f'Total: {total_sales:.2f}')
