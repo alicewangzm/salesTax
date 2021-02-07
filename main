@@ -4,6 +4,8 @@ Create a loop that keep takes input until input 'end'
 
 """
 using wit natural language process api to recognize the number, price, and type of the product
+link to python wit api
+https://github.com/wit-ai/pywit
 """
 from wit import wit
 
